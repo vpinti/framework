@@ -27,6 +27,24 @@ class EventDispatcher implements EventDispatcherInterface
         return $event;
     }
 
+    /**
+     * @return void
+     */
+    public function addSubscriber(EventSubscriberInterface $subscriber)
+    {
+        foreach ($subscriber->getSubscribedEvents() as $eventName => $params) {
+            if (\is_string($params)) {
+                $callable = class_exists($params) ? new $params : [$subscriber, $params];
+                $this->addListener($eventName, $callable);
+            } else {
+                foreach($params as $listener) {
+                    $callable = class_exists($listener[0]) ? new $listener[0] : [$subscriber, $listener[0]];
+                    $this->addListener($eventName, $callable);
+                }
+            }
+        }
+    }
+
     // $eventName e.g. Framework\EventDispatcher\ResponseEvent
     public function addListener(string $eventName, callable $listener): self
     {
