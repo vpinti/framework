@@ -9,12 +9,14 @@ use Twig\Environment;
 use Twig\Extension\DebugExtension;
 use Twig\Loader\FilesystemLoader;
 use Twig\TwigFunction;
+use Symfony\Component\Asset\PackageInterface;
 
 class TwigFactory
 {
     public function __construct(
         private SessionInterface $session,
-        private string $templatePath
+        private string $templatePath,
+        private PackageInterface $package
     )
     {
     }
@@ -30,9 +32,10 @@ class TwigFactory
             'cache' => false
          ]);
 
-         // add new twig session() function to Environment
+         // add new twig session() function to Environment:w
          $twig->addExtension(new DebugExtension());
          $twig->addFunction(new TwigFunction('session', [$this, 'getSession']));
+         $twig->addFunction(new TwigFunction('asset', [$this, 'getAsset']));
 
          return $twig;
     }
@@ -40,5 +43,10 @@ class TwigFactory
     public function getSession(): SessionInterface
     {
         return $this->session;
+    }
+
+    public function getAsset(string $path): string
+    {
+        return $this->package->getUrl($path);
     }
 }
